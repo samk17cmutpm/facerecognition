@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Face Recognition</string>
+    <string name="update_info_permission_needed_camera_and_write_external">Camera and Write External permissions needed. Please allow in App Settings for additional functionality.</string>
+</resources>
