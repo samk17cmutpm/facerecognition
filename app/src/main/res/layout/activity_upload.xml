@@ -24,11 +24,21 @@
         android:id="@+id/preview_image_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/setting_button"
         android:layout_alignEnd="@+id/number_progress_bar"
         android:layout_alignLeft="@+id/number_progress_bar"
         android:layout_alignRight="@+id/number_progress_bar"
         android:layout_alignStart="@+id/number_progress_bar"
         android:layout_below="@+id/upload_image_view"
-        android:layout_marginTop="21dp"/>
+        android:layout_marginTop="21dp" />
+
+    <Button
+        android:id="@+id/setting_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/upload_image_view"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/upload_image_view"
+        android:text="Setting" />
 
 </RelativeLayout>

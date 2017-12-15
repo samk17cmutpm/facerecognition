@@ -1,6 +1,7 @@
 package neolab.vn.facerecognition;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -14,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -25,9 +27,13 @@ import java.io.File;
 
 import gun0912.tedbottompicker.TedBottomPicker;
 import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class UploadActivity extends AppCompatActivity implements ProgressRequestBody.UploadCallbacks, View.OnClickListener {
 
@@ -45,6 +51,22 @@ public class UploadActivity extends AppCompatActivity implements ProgressRequest
 
     private NumberProgressBar mNumberProgressBar;
 
+    private Button mSettingButton;
+
+    /**
+     * Upload Service
+     */
+    private Retrofit.Builder builder = new Retrofit.Builder()
+                    .baseUrl(BaseUrl.getInstance().getUrl())
+                    .addConverterFactory(GsonConverterFactory.create());
+
+
+    private Retrofit retrofit = builder.build();
+
+    private HttpLoggingInterceptor logging = new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
+
+    private OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,10 +82,13 @@ public class UploadActivity extends AppCompatActivity implements ProgressRequest
 
         mNumberProgressBar = (NumberProgressBar) findViewById(R.id.number_progress_bar);
 
+        mSettingButton = (Button) findViewById(R.id.setting_button);
+        mSettingButton.setOnClickListener(this);
+
         /*
          * Initialize Service
          */
-        mService = ServiceGenerator.createService(Service.class);
+        mService = createService(Service.class);
     }
 
     @Override
@@ -79,7 +104,7 @@ public class UploadActivity extends AppCompatActivity implements ProgressRequest
 
     @Override
     public void onFinish() {
-
+        mNumberProgressBar.setVisibility(View.INVISIBLE);
     }
 
     public boolean isSpecificPermissionsGranted(String[] permissions) {
@@ -128,6 +153,11 @@ public class UploadActivity extends AppCompatActivity implements ProgressRequest
                     requestSpecificPermissions(mPermissions, R.string.update_info_permission_needed_camera_and_write_external);
                 }
                 break;
+            case R.id.setting_button:
+                Intent intent = new Intent(UploadActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                finish();
+                break;
         }
     }
 
@@ -151,8 +181,11 @@ public class UploadActivity extends AppCompatActivity implements ProgressRequest
                     @Override
                     public void onImageSelected(Uri uri) {
                         // here is selected uri
-                        if (uri != null)
+                        if (uri != null) {
+                            mNumberProgressBar.setVisibility(View.VISIBLE);
                             handleUri(uri);
+                        }
+
                     }
                 })
                 .setImageProvider(null)
@@ -168,19 +201,27 @@ public class UploadActivity extends AppCompatActivity implements ProgressRequest
         request.enqueue(new Callback<UploadEntity>() {
             @Override
             public void onResponse(Call<UploadEntity> call, Response<UploadEntity> response) {
-
+                mNumberProgressBar.setVisibility(View.INVISIBLE);
             }
 
             @Override
             public void onFailure(Call<UploadEntity> call, Throwable t) {
-
+                mNumberProgressBar.setVisibility(View.INVISIBLE);
             }
         });
-
         Glide.with(getApplicationContext())
                 .load(new File(uri.getPath())).into(mPreviewImageView);
-
     }
+
+    public <S> S createService(Class<S> serviceClass) {
+        if (!httpClient.interceptors().contains(logging)) {
+            httpClient.addInterceptor(logging);
+            builder.client(httpClient.build());
+            retrofit = builder.build();
+        }
+        return retrofit.create(serviceClass);
+    }
+
 
 
 }
